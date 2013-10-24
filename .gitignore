@@ -1,0 +1,6 @@
+bin/
+release/
+.classpath
+.project
+collision.txt
+*.iml
