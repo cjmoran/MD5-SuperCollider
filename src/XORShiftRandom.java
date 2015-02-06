@@ -13,7 +13,8 @@ public class XORShiftRandom {
 	}
 
 	/**
-	 * Returns a random int between 0 and the given max value.
+	 * Returns a NON-SECURE random int between 0 and the given max value.
+	 * But does it really fast.
 	 *
 	 * @param max Max value.
 	 * @return A random int.

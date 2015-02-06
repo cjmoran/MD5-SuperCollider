@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  *** Please excuse the abysmal coding practices contained herein. ***/
 
 public class CFinder {
-	private static final String VERSION = "2.2.0";
+	private static final String VERSION = "2.2.1";
 	private static final int NUM_CPU_CORES = Runtime.getRuntime().availableProcessors();
 
 	private static int randomStringLength;
