@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /*
 	=====MD5 Collision Finder=====
@@ -23,14 +24,15 @@ import java.util.Scanner;
  *** Please excuse the abysmal coding practices contained herein. ***/
 
 public class CFinder {
-	private static final String VERSION = "2.1.0";
+	private static final String VERSION = "2.2.0";
 	private static final int NUM_CPU_CORES = Runtime.getRuntime().availableProcessors();
 
 	private static int randomStringLength;
-	private static boolean printStatus;
+	private static boolean printEveryHash;
 	private static String userInput;
 
 	private static Thread[] threads;
+	public static AtomicInteger attemptsPerSecond;
 
 	private final static char[] characters = {
 		'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z',
@@ -41,6 +43,8 @@ public class CFinder {
 		'{','}','|',':','"','<','>','?','~'};
 	
 	public static void main(String[] args) {
+		attemptsPerSecond = new AtomicInteger(0);
+
 		Scanner darkly = new Scanner(System.in);
 		byte[] inputHash;
 		MessageDigest messageDigest = null;
@@ -59,7 +63,7 @@ public class CFinder {
 				randomStringLength = darkly.nextInt();
 				darkly.nextLine();
 			//Print Status Messages
-				printStatus = yesNoQuestion("\n(SLOW) Should I print status messages for each hash I generate? (y/n)");
+				printEveryHash = yesNoQuestion("\n(SLOW) Should I print status messages for each hash I generate? (y/n)");
 		
 		//Get MD5 to find collision for
 		System.out.println("\nEnter the MD5 you'd like to find a collision for, " +
@@ -90,10 +94,44 @@ public class CFinder {
 		
 		System.out.println("\nWorking on " + NUM_CPU_CORES + " threads...\n");
 
-		Worker.OnCollisionFoundListener collisionFoundListener = setupCompletionListener();
-		final Worker w = new Worker(hashToMatch, collisionFoundListener);
+		final Worker w = new Worker(hashToMatch, () -> stopAllThreads(threads));
 		threads = createThreads(NUM_CPU_CORES, w);
 		startThreads(threads);
+
+		if(!printEveryHash) {
+			System.out.print("Attempts per second: ");
+			new Thread(new Runnable() {
+				final long UPDATE_INTERVAL = 1000l;
+				String previousOutput = null;
+
+				@Override
+				public void run() {
+					while(!Thread.interrupted()) {
+						if(previousOutput != null) {
+							System.out.print(getBackspaceCharacters(previousOutput.length()));
+						}
+						final int attempts = attemptsPerSecond.intValue();
+						attemptsPerSecond.set(0);
+						System.out.print(attempts);
+						previousOutput = Integer.toString(attempts);
+
+						try {
+							Thread.sleep(UPDATE_INTERVAL);
+						} catch(InterruptedException e) {
+							System.err.println("Display update thread interrupted!");
+						}
+					}
+				}
+			}).start();
+		}
+	}
+
+	public static String getBackspaceCharacters(int num) {
+		StringBuilder sb = new StringBuilder();
+		for(int i=0; i<num; i++) {
+			sb.append("\b");
+		}
+		return sb.toString();
 	}
 
 	private static Thread[] createThreads(final int numCpuCores, final Runnable runnable) {
@@ -102,14 +140,6 @@ public class CFinder {
 			workerThreads[i] = new Thread(runnable);
 		}
 		return workerThreads;
-	}
-
-	private static Worker.OnCollisionFoundListener setupCompletionListener() {
-		return new Worker.OnCollisionFoundListener() {
-			@Override
-			public synchronized void onCollisionFound() {
-				stopAllThreads(threads);
-			}};
 	}
 
 	private static void startThreads(final Thread[] threadsToRun) {
@@ -198,7 +228,7 @@ public class CFinder {
 					e.printStackTrace();
 				}
 
-				if(printStatus) {	//print every try to the console, if requested
+				if(printEveryHash) {
 					System.out.println("Random input: " + randomString + "\tHashed: " + getHexValue(randomBytes));
 				}
 
@@ -218,6 +248,10 @@ public class CFinder {
 							"This information has been saved to 'collision.txt' in this program's directory.");
 
 					collisionFoundListener.onCollisionFound();
+				}
+
+				if(!printEveryHash) {
+					CFinder.attemptsPerSecond.incrementAndGet();
 				}
 			}
 		}
@@ -253,7 +287,7 @@ public class CFinder {
 
 	private static List<String> splitString(String hexString, int partSize) {
 		//Splits a String into pieces of length partSize
-		List<String> parts = new ArrayList<String>();
+		List<String> parts = new ArrayList<>();
 		int length = hexString.length();
 		for(int i=0; i<length; i+=partSize) {
 			parts.add(hexString.substring(i, Math.min(length, i + partSize)));
