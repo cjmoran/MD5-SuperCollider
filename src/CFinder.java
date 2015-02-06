@@ -197,6 +197,7 @@ public class CFinder {
 		private boolean collisionFound = false;
 		private byte[] inputHash;
 		private OnCollisionFoundListener collisionFoundListener;
+		XORShiftRandom rng = new XORShiftRandom();
 
 		public Worker(byte[] hashToMatch, OnCollisionFoundListener listener) {
 			inputHash = hashToMatch;
@@ -259,6 +260,14 @@ public class CFinder {
 		public interface OnCollisionFoundListener {
 			void onCollisionFound();
 		}
+
+		private String getRandomString(int length) {
+			StringBuilder sb = new StringBuilder(length);
+			while(sb.length() < length) {
+				sb.append(characters[rng.nextInt(characters.length-1)]);
+			}
+			return sb.toString();
+		}
 	}
 
 	private static String getHexValue(byte[] hash) {
@@ -293,17 +302,5 @@ public class CFinder {
 			parts.add(hexString.substring(i, Math.min(length, i + partSize)));
 		}
 		return parts;
-	}
-
-	private static String getRandomString(int length) {
-		StringBuilder sb = new StringBuilder(length);
-		while(sb.length() < length) {
-			sb.append(characters[getRandomInt(0, characters.length-1)]);
-		}
-		return sb.toString();
-	}
-
-	private static int getRandomInt(int min, int max) {
-		return min + (int)(Math.random() * ((max - min) + 1));
 	}
 }
