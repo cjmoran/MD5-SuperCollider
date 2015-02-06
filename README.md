@@ -5,6 +5,6 @@ A program which attempts to find a collision for an MD5 hash or the MD5 hash of 
 
 Usage:
 
-![Program Screenshot](http://i.imgur.com/wsRnQ20.png)
+![Program Screenshot](http://i.imgur.com/JFecIAV.png)
 
 On Windows (and probably most other OSes), you can press Ctrl+C to exit.
