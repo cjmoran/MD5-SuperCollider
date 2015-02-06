@@ -4,3 +4,5 @@ release/
 .project
 collision.txt
 *.iml
+.idea/
+out/
