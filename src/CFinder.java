@@ -1,6 +1,7 @@
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
+import java.text.NumberFormat;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /*
@@ -14,7 +15,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 */
 
 public class CFinder {
-	private static final String VERSION = "2.2.2";
+	private static final String VERSION = "2.2.3";
 	private static final int NUM_CPU_CORES = Runtime.getRuntime().availableProcessors();
 
 	private static Thread[] threads;
@@ -102,8 +103,9 @@ public class CFinder {
 					}
 					final int attempts = attemptsPerSecond.intValue();
 					attemptsPerSecond.set(0);
-					System.out.print(attempts);
-					previousOutput = Integer.toString(attempts);
+					final String output = NumberFormat.getInstance().format(attempts);
+					System.out.print(output);
+					previousOutput = output;
 
 					try {
 						Thread.sleep(UPDATE_INTERVAL);
